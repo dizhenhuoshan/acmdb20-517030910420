@@ -25,16 +25,18 @@ public class Catalog {
     {
         public final DbFile dbFile;
         public final String pkeyField;
+        public final String name;
 
-        public CatalogItem(DbFile dbFile, String pkeyField)
+        public CatalogItem(DbFile dbFile, String name, String pkeyField)
         {
             this.dbFile = dbFile;
+            this.name = name;
             this.pkeyField = pkeyField;
         }
     }
 
-    private HashMap<String, CatalogItem> catalogItemHashMap;
-    private HashMap<Integer, String> idNameHashMap;
+    private HashMap<Integer, CatalogItem> catalogItemHashMap;
+    private HashMap<String, Integer> nameIdHashMap;
     /*My implementation End*/
 
 
@@ -44,8 +46,8 @@ public class Catalog {
      */
     public Catalog() {
         // some code goes here
-        this.catalogItemHashMap = new LinkedHashMap<String, CatalogItem>();
-        this.idNameHashMap = new LinkedHashMap<Integer, String>();
+        this.catalogItemHashMap = new LinkedHashMap<Integer, CatalogItem>();
+        this.nameIdHashMap = new LinkedHashMap<String, Integer>();
     }
 
     /**
@@ -59,8 +61,8 @@ public class Catalog {
      */
     public void addTable(DbFile file, String name, String pkeyField) {
         // some code goes here
-        this.catalogItemHashMap.put(name, new CatalogItem(file, pkeyField));
-        this.idNameHashMap.put(file.getId(), name);
+        this.catalogItemHashMap.put(file.getId(), new CatalogItem(file, name, pkeyField));
+        this.nameIdHashMap.put(name, file.getId());
     }
 
     public void addTable(DbFile file, String name) {
@@ -84,9 +86,9 @@ public class Catalog {
      */
     public int getTableId(String name) throws NoSuchElementException {
         // some code goes here
-        if (!catalogItemHashMap.containsKey(name))
+        if (!nameIdHashMap.containsKey(name))
             throw new NoSuchElementException("NoSuch name in catalog getTableID()");
-        return catalogItemHashMap.get(name).dbFile.getId();
+        return nameIdHashMap.get(name);
     }
 
     /**
@@ -97,9 +99,9 @@ public class Catalog {
      */
     public TupleDesc getTupleDesc(int tableid) throws NoSuchElementException {
         // some code goes here
-        if (!idNameHashMap.containsKey(tableid))
+        if (!catalogItemHashMap.containsKey(tableid))
             throw new NoSuchElementException("NoSuch name in catalog getTupleDesc()");
-        return catalogItemHashMap.get(idNameHashMap.get(tableid)).dbFile.getTupleDesc();
+        return catalogItemHashMap.get(tableid).dbFile.getTupleDesc();
     }
 
     /**
@@ -110,31 +112,31 @@ public class Catalog {
      */
     public DbFile getDatabaseFile(int tableid) throws NoSuchElementException {
         // some code goes here
-        if (!idNameHashMap.containsKey(tableid))
+        if (!catalogItemHashMap.containsKey(tableid))
             throw new NoSuchElementException("NoSuch name in catalog getTupleDesc()");
-        return catalogItemHashMap.get(idNameHashMap.get(tableid)).dbFile;
+        return catalogItemHashMap.get(tableid).dbFile;
     }
 
     public String getPrimaryKey(int tableid) {
         // some code goes here
-        return catalogItemHashMap.get(idNameHashMap.get(tableid)).pkeyField;
+        return catalogItemHashMap.get(tableid).pkeyField;
     }
 
     public Iterator<Integer> tableIdIterator() {
         // some code goes here
-        return idNameHashMap.keySet().iterator();
+        return catalogItemHashMap.keySet().iterator();
     }
 
     public String getTableName(int id) {
         // some code goes here
-        return idNameHashMap.get(id);
+        return catalogItemHashMap.get(id).name;
     }
     
     /** Delete all tables from the catalog */
     public void clear() {
         // some code goes here
         catalogItemHashMap.clear();
-        idNameHashMap.clear();
+        nameIdHashMap.clear();
     }
     
     /**

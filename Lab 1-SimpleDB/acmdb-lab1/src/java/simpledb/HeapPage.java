@@ -22,6 +22,38 @@ public class HeapPage implements Page {
     byte[] oldData;
     private final Byte oldDataLock=new Byte((byte)0);
 
+    /*My implementation Start*/
+    private class ValidTupleIterator implements Iterator<Tuple>
+    {
+
+        int tupleOffset = 0;
+        int validCounter = 0;
+
+        @Override
+        public boolean hasNext()
+        {
+            return (this.tupleOffset < getNumTuples()) && (this.validCounter < (getNumTuples() - getNumEmptySlots()));
+        }
+
+        @Override
+        public Tuple next()
+        {
+            if (!hasNext())
+                throw new NoSuchElementException("ValidTupleIterator Does Not have Next Element");
+            while (!isSlotUsed(tupleOffset))
+                tupleOffset++;
+            validCounter++;
+            return tuples[tupleOffset++];
+        }
+
+        @Override
+        public void remove()
+        {
+            throw new UnsupportedOperationException("HeapPage: ValidTupleIterator Does Not Support Remove!\n");
+        }
+    }
+    /*My implementation End*/
+
     /**
      * Create a HeapPage from a set of bytes of data read from disk.
      * The format of a HeapPage is a set of header bytes indicating
@@ -67,8 +99,7 @@ public class HeapPage implements Page {
     */
     private int getNumTuples() {        
         // some code goes here
-        return 0;
-
+        return (BufferPool.getPageSize() * 8) / (td.getSize() * 8 + 1);
     }
 
     /**
@@ -78,8 +109,7 @@ public class HeapPage implements Page {
     private int getHeaderSize() {        
         
         // some code goes here
-        return 0;
-                 
+        return (int) Math.ceil(((double) getNumTuples()) / 8.0);
     }
     
     /** Return a view of this page before it was modified
@@ -112,7 +142,8 @@ public class HeapPage implements Page {
      */
     public HeapPageId getId() {
     // some code goes here
-    throw new UnsupportedOperationException("implement this");
+//    throw new UnsupportedOperationException("implement this");
+        return this.pid;
     }
 
     /**
@@ -282,7 +313,14 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        return 0;
+        int emptySlots = 0;
+        int totalTuples = getNumTuples();
+        for (int i = 0; i < totalTuples; i++)
+        {
+            if (!isSlotUsed(i))
+                emptySlots++;
+        }
+        return emptySlots;
     }
 
     /**
@@ -290,7 +328,9 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return false;
+        byte headerByte = header[i / 8];
+        headerByte = (byte) (headerByte >> (i % 8));
+        return (headerByte & 1) == 1;
     }
 
     /**
@@ -307,8 +347,9 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return null;
+        return new ValidTupleIterator();
     }
+
 
 }
 
