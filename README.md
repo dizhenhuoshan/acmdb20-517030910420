@@ -1,5 +1,5 @@
 # Submit
-This is the subject branch for project for CS 392: Database Management System.
+This is the submit branch for project for CS 392: Database Management System.
 
 Working Process:
 - lab 1 finished
