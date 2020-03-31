@@ -2,6 +2,9 @@ package simpledb;
 
 import java.io.*;
 
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,6 +29,14 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
+    /*My implementation Start*/
+    private Page[] pageArray;
+    private HashMap<PageId, Integer> pageIndexHashMap;
+    private HashMap<Integer, TransactionId> lastModifyTransactionMap;
+    private BitSet readyBitSet;
+    private BitSet dirtyBitSet;
+    /*My implementation End*/
+
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -33,12 +44,17 @@ public class BufferPool {
      */
     public BufferPool(int numPages) {
         // some code goes here
+        this.pageArray = new Page[numPages];
+        this.pageIndexHashMap = new HashMap<PageId, Integer>();
+        this.lastModifyTransactionMap = new HashMap<Integer, TransactionId>();
+        this.readyBitSet = new BitSet(numPages);
+        this.dirtyBitSet = new BitSet(numPages);
     }
     
     public static int getPageSize() {
       return pageSize;
     }
-    
+
     // THIS FUNCTION SHOULD ONLY BE USED FOR TESTING!!
     public static void setPageSize(int pageSize) {
     	BufferPool.pageSize = pageSize;
@@ -64,10 +80,21 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+        Page targetPage;
+        if (!this.pageIndexHashMap.containsKey(pid))
+        {
+            targetPage = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+            int index = readyBitSet.nextClearBit(0);
+            this.pageIndexHashMap.put(pid, index);
+            this.readyBitSet.set(index, true);
+            pageArray[index] = targetPage;
+        }
+        else
+            targetPage = pageArray[pageIndexHashMap.get(pid)];
+        return targetPage;
     }
 
     /**

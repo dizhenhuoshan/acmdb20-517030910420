@@ -10,6 +10,11 @@ public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    /*My implementation Start*/
+    private PageId pageId;
+    private int tupleNo;
+    /*My implementation End*/
+
     /**
      * Creates a new RecordId referring to the specified PageId and tuple
      * number.
@@ -21,6 +26,8 @@ public class RecordId implements Serializable {
      */
     public RecordId(PageId pid, int tupleno) {
         // some code goes here
+        this.pageId = pid;
+        this.tupleNo = tupleno;
     }
 
     /**
@@ -28,7 +35,7 @@ public class RecordId implements Serializable {
      */
     public int tupleno() {
         // some code goes here
-        return 0;
+        return this.tupleNo;
     }
 
     /**
@@ -36,7 +43,7 @@ public class RecordId implements Serializable {
      */
     public PageId getPageId() {
         // some code goes here
-        return null;
+        return this.pageId;
     }
 
     /**
@@ -48,7 +55,14 @@ public class RecordId implements Serializable {
     @Override
     public boolean equals(Object o) {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
+//        throw new UnsupportedOperationException("implement this");
+        if (!(o instanceof RecordId))
+            return false;
+        else
+        {
+            RecordId objId = (RecordId) o;
+            return (this.tupleNo == objId.tupleNo) && (this.pageId.equals(objId.pageId));
+        }
     }
 
     /**
@@ -60,8 +74,12 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+//        throw new UnsupportedOperationException("implement this");
+//        final int prime = 31;
+//        int result = 1;
+//        result = prime * result + this.pageId.hashCode();
+//        result = prime * result + this.tupleNo;
+        return (Integer.toString(this.pageId.hashCode()) + Integer.toString(this.tupleNo)).hashCode();
     }
 
 }
