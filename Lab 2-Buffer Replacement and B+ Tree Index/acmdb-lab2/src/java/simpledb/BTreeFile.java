@@ -309,16 +309,8 @@ public class BTreeFile implements DbFile {
 			page.deleteTuple(tmpTuple);
 			newRightPage.insertTuple(tmpTuple);
 		}
-		Tuple middleTuple = null;
-		if (numTuplesTotal % 2 == 0)
-		{
-			middleTuple = tmpTuple;
-		}
-		else
-		{
-			middleTuple = moveIterator.next();
-		}
 
+		Tuple middleTuple = moveIterator.next(); // ensure to get left hand most
 		BTreeEntry copyUpKeyEntry = new BTreeEntry(middleTuple.getField(keyField), page.getId(), newRightPage.getId());
 		BTreeInternalPage parentPage = getParentWithEmptySlots(tid, dirtypages, page.getParentId(), copyUpKeyEntry.getKey());
 		dirtypages.put(parentPage.getId(), parentPage);
@@ -703,7 +695,7 @@ public class BTreeFile implements DbFile {
 				sibling.deleteTuple(tmpTuple);
 				page.insertTuple(tmpTuple);
 			}
-			tmpTuple = moveIterator.next(); // get the first tuple of the right-hand page
+//			tmpTuple = moveIterator.next(); // get the first tuple of the right-hand page
 			entry.setKey(tmpTuple.getField(this.keyField));
 		}
 		else
@@ -716,6 +708,7 @@ public class BTreeFile implements DbFile {
 				page.insertTuple(tmpTuple);
 			}
 			// the last page is the first tuple of the right-hand page
+			tmpTuple = moveIterator.next(); // get the left hand last to ensure left most
 			entry.setKey(tmpTuple.getField(this.keyField));
 		}
 		parent.updateEntry(entry);
