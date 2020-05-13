@@ -38,7 +38,7 @@ public class TupleDesc implements Serializable {
         // Redefine the equals function for TDItem.
         public boolean equals(TDItem tdItem)
         {
-            return (this.fieldName.equals(tdItem.fieldName) && this.fieldType == tdItem.fieldType);
+            return (this.fieldType == tdItem.fieldType);
         }
         /*My implementation End*/
     }

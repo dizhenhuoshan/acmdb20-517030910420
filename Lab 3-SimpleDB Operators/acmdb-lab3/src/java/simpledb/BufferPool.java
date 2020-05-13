@@ -178,6 +178,29 @@ public class BufferPool {
         ArrayList<Page> dirtyPageList = file.insertTuple(tid, t);
         for (Page dirtyPage : dirtyPageList)
         {
+            PageId pid = dirtyPage.getId();
+            if (!this.pageIndexHashMap.containsKey(pid))
+            {
+                Page targetPage;
+                targetPage = dirtyPage;
+                int index = readyBitSet.nextClearBit(0);
+                while (index >= this.numPages)
+                {
+                    this.evictPage();
+                    index = readyBitSet.nextClearBit(0);
+                }
+                this.pageIndexHashMap.put(pid, index);
+                this.LRUList.addLast(pid);
+                this.readyBitSet.set(index, true);
+                this.pageArray[index] = targetPage;
+            }
+            else
+            {
+                int pageArrayId = this.pageIndexHashMap.get(pid);
+                this.LRUList.remove(pid);
+                this.LRUList.addLast(pid); // move pid to the end of the LRU list
+                this.pageArray[pageArrayId] = dirtyPage;
+            }
             dirtyPage.markDirty(true, tid);
         }
     }
@@ -203,6 +226,29 @@ public class BufferPool {
         ArrayList<Page> dirtyPageList = file.deleteTuple(tid, t);
         for (Page dirtyPage : dirtyPageList)
         {
+            PageId pid = dirtyPage.getId();
+            if (!this.pageIndexHashMap.containsKey(pid))
+            {
+                Page targetPage;
+                targetPage = dirtyPage;
+                int index = readyBitSet.nextClearBit(0);
+                while (index >= this.numPages)
+                {
+                    this.evictPage();
+                    index = readyBitSet.nextClearBit(0);
+                }
+                this.pageIndexHashMap.put(pid, index);
+                this.LRUList.addLast(pid);
+                this.readyBitSet.set(index, true);
+                this.pageArray[index] = targetPage;
+            }
+            else
+            {
+                int pageArrayId = this.pageIndexHashMap.get(pid);
+                this.LRUList.remove(pid);
+                this.LRUList.addLast(pid); // move pid to the end of the LRU list
+                this.pageArray[pageArrayId] = dirtyPage;
+            }
             dirtyPage.markDirty(true, tid);
         }
     }

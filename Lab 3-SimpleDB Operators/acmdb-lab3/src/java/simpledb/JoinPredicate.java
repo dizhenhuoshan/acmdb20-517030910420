@@ -49,6 +49,21 @@ public class JoinPredicate implements Serializable {
         // some code goes here
         return t1.getField(field1).compare(this.op, t2.getField(field2));
     }
+
+    /*My Implementation Start*/
+    /**
+     * Apply the predicate to the two specified fields. The comparison can be
+     * made through Field's compare method.
+     *
+     * This function is used in HashEquiJoin for quicker hash index.
+     *
+     * @return true if the fields satisfy the predicate.
+     */
+    public boolean filterByFiled(Field f1, Field f2) {
+        // some code goes here
+        return f1.compare(this.op, f2);
+    }
+    /*My Implementation End*/
     
     public int getField1()
     {
