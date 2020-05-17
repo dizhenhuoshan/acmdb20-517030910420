@@ -26,11 +26,12 @@ public class HeapFile implements DbFile {
         private HeapPage currentPage;
         private Iterator<Tuple> currentTupleIterator;
         private TransactionId transactionId;
-        private int pageCounter = (int) (rawFile.length() / BufferPool.getPageSize());
+        private int pageCounter = 0;
 
         public HeapFileTupleIterator(TransactionId tid)
         {
             this.transactionId = tid;
+            this.pageCounter = numPages();
         }
 
         @Override
@@ -194,7 +195,7 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return (int) (rawFile.length() / BufferPool.getPageSize());
+        return (int) Math.ceil(rawFile.length() / BufferPool.getPageSize());
     }
 
     // see DbFile.java for javadocs
@@ -209,7 +210,7 @@ public class HeapFile implements DbFile {
         }
 
         ArrayList<Page> modifiedPageList = new ArrayList<Page>();
-        int pageCounter = (int) (rawFile.length() / BufferPool.getPageSize());
+        int pageCounter = numPages();
         for (int i = 0; i < pageCounter; i++)
         {
             PageId pid = new HeapPageId(getId(), i);

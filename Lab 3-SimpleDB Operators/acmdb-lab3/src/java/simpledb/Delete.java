@@ -1,6 +1,7 @@
 package simpledb;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * The delete operator. Delete reads tuples from its child operator and removes
@@ -76,10 +77,12 @@ public class Delete extends Operator {
         {
             int count = 0;
             int cnt = 0;
+            ArrayList<Tuple> arrayList = new ArrayList<Tuple>();
             while (child.hasNext())
+                arrayList.add(child.next());
+            for (Tuple deletingTuple : arrayList)
             {
                 cnt++;
-                Tuple deletingTuple = this.child.next();
                 try
                 {
                     Database.getBufferPool().deleteTuple(this.tid, deletingTuple);
