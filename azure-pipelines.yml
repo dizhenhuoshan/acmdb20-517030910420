@@ -16,3 +16,5 @@ stages:
       displayName: Run test and system test of lab2
     - script: export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8 && cd acmdb-lab3 && ant clean && ant test && ant systemtest
       displayName: Run test and system test of lab3
+    - script: export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8 && cd acmdb-lab4 && ant clean && ant test && ant systemtest
+      displayName: Run test and system test of lab4
