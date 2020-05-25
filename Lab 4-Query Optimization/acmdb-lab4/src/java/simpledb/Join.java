@@ -117,8 +117,7 @@ public class Join extends Operator {
 
     public void rewind() throws DbException, TransactionAbortedException {
         // some code goes here
-        this.close();
-        this.open();
+        this.joinedIterator = this.joinedArray.iterator();
     }
 
     /**

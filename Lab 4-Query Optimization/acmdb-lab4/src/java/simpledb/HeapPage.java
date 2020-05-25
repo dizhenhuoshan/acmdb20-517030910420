@@ -350,14 +350,16 @@ public class HeapPage implements Page {
      */
     public int getNumEmptySlots() {
         // some code goes here
-        int emptySlots = 0;
-        int totalTuples = getNumTuples();
-        for (int i = 0; i < totalTuples; i++)
+        int usedSlots = 0;
+        for (int tmpByte : this.header)
         {
-            if (!isSlotUsed(i))
-                emptySlots++;
+            while (tmpByte != 0)
+            {
+                usedSlots += 1;
+                tmpByte = (tmpByte & (tmpByte - 1)) &0b11111111;
+            }
         }
-        return emptySlots;
+        return this.numSlots - usedSlots;
     }
 
     /**

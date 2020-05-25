@@ -1,9 +1,12 @@
 package simpledb;
 
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static java.lang.Math.*;
 
 /**
  * TableStats represents statistics (e.g., histograms) about base tables in a
@@ -66,6 +69,15 @@ public class TableStats {
      */
     static final int NUM_HIST_BINS = 100;
 
+
+    /*My Implementation Start*/
+    private int ioCostPerPage;
+    private int tableId;
+    private TupleDesc tupleDesc;
+    private Hashtable<Integer, Object> histogramMap;
+    private int numTuples = 0;
+    /*My Implementation End*/
+
     /**
      * Create a new TableStats object, that keeps track of statistics on each
      * column of a table
@@ -85,9 +97,76 @@ public class TableStats {
         // necessarily have to (for example) do everything
         // in a single scan of the table.
         // some code goes here
+        this.tableId = tableid;
+        this.ioCostPerPage = ioCostPerPage;
+        this.tupleDesc = Database.getCatalog().getTupleDesc(tableid);
 
-        
+        Hashtable<Integer, Integer> maxValueMap = new Hashtable<Integer, Integer>();
+        Hashtable<Integer, Integer> minValueMap = new Hashtable<Integer, Integer>();
+        this.histogramMap = new Hashtable<Integer, Object>();
 
+        for (int i = 0; i < tupleDesc.getLength(); i++)
+        {
+            if (tupleDesc.getFieldType(i) == Type.INT_TYPE)
+            {
+                maxValueMap.put(i, Integer.MIN_VALUE);
+                minValueMap.put(i, Integer.MAX_VALUE);
+            }
+            if (tupleDesc.getFieldType(i) == Type.STRING_TYPE)
+            {
+                histogramMap.put(i, new StringHistogram(TableStats.NUM_HIST_BINS));
+            }
+        }
+
+        //TODO: Notice here we need a transaction in lab5.
+        DbFileIterator dbFileIterator = Database.getCatalog().getDatabaseFile(tableid).iterator(new TransactionId());
+        try
+        {
+            dbFileIterator.open();
+            Tuple tmpTuple;
+            if (!maxValueMap.keySet().isEmpty())
+            {
+                while (dbFileIterator.hasNext())
+                {
+                    tmpTuple = dbFileIterator.next();
+                    for (int index : minValueMap.keySet())
+                    {
+                        int currentMax = max(maxValueMap.get(index), ((IntField)tmpTuple.getField(index)).getValue());
+                        maxValueMap.put(index, currentMax);
+                        int currentMin = min(minValueMap.get(index), ((IntField)tmpTuple.getField(index)).getValue());
+                        minValueMap.put(index, currentMin);
+                    }
+                }
+
+                for (int index : minValueMap.keySet())
+                {
+                    this.histogramMap.put(index, new IntHistogram(TableStats.NUM_HIST_BINS, minValueMap.get(index), maxValueMap.get(index)));
+                }
+                dbFileIterator.rewind();
+            }
+
+            while (dbFileIterator.hasNext())
+            {
+                tmpTuple = dbFileIterator.next();
+                for (int index : this.histogramMap.keySet())
+                {
+                    if (this.histogramMap.get(index) instanceof IntHistogram)
+                    {
+                        ((IntHistogram) this.histogramMap.get(index)).addValue(((IntField)tmpTuple.getField(index)).getValue());
+                    }
+                    if (this.histogramMap.get(index) instanceof StringHistogram)
+                    {
+                        ((StringHistogram) this.histogramMap.get(index)).addValue(((StringField)tmpTuple.getField(index)).getValue());
+                    }
+                }
+                this.numTuples += 1;
+            }
+            dbFileIterator.close();
+        }
+        catch (TransactionAbortedException | DbException e)
+        {
+            e.printStackTrace();
+        }
 
     }
 
@@ -105,7 +184,7 @@ public class TableStats {
      */
     public double estimateScanCost() {
         // some code goes here
-        return 0;
+        return this.ioCostPerPage * Database.getCatalog().getDatabaseFile(this.tableId).numPages();
     }
 
     /**
@@ -119,7 +198,7 @@ public class TableStats {
      */
     public int estimateTableCardinality(double selectivityFactor) {
         // some code goes here
-        return 0;
+        return (int) (this.numTuples * selectivityFactor);
     }
 
     /**
@@ -152,7 +231,21 @@ public class TableStats {
      */
     public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
         // some code goes here
-        return 1.0;
+        if (this.histogramMap.keySet().contains(field))
+        {
+            Object histogram = histogramMap.get(field);
+            if (histogram instanceof IntHistogram)
+            {
+                IntHistogram intHistogram = (IntHistogram) histogram;
+                return intHistogram.estimateSelectivity(op, ((IntField)constant).getValue());
+            }
+            if (histogram instanceof StringHistogram)
+            {
+                StringHistogram stringHistogram = (StringHistogram) histogram;
+                return stringHistogram.estimateSelectivity(op, ((StringField) constant).getValue());
+            }
+        }
+        return 0.0;
     }
 
     /**
@@ -160,7 +253,7 @@ public class TableStats {
      * */
     public int totalTuples() {
         // some code goes here
-        return 0;
+        return this.numTuples;
     }
 
 }

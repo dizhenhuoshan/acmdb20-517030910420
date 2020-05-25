@@ -88,4 +88,12 @@ public interface DbFile {
      * @return TupleDesc of this DbFile.
      */
     public TupleDesc getTupleDesc();
+
+    /*My Implementation Start*/
+    /**
+     * Returns the number of pages that stored in this DbFile.
+     * @return Number of pages in this DbFile.
+     */
+    public int numPages();
+    /*My Implementation End*/
 }

@@ -5,6 +5,9 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
 /**
  * The JoinOptimizer class is responsible for ordering a series of joins
  * optimally, and for selecting the best instantiation of a join for a given
@@ -13,6 +16,10 @@ import javax.swing.tree.*;
 public class JoinOptimizer {
     LogicalPlan p;
     Vector<LogicalJoinNode> joins;
+
+    /*My Implementation Start*/
+    PlanCache globalPlanCache;
+    /*My Implementation End*/
 
     /**
      * Constructor
@@ -25,6 +32,9 @@ public class JoinOptimizer {
     public JoinOptimizer(LogicalPlan p, Vector<LogicalJoinNode> joins) {
         this.p = p;
         this.joins = joins;
+        /*My Implementation Start*/
+        this.globalPlanCache = new PlanCache();
+        /*My Implementation End*/
     }
 
     /**
@@ -111,7 +121,11 @@ public class JoinOptimizer {
             // HINT: You may need to use the variable "j" if you implemented
             // a join algorithm that's more complicated than a basic
             // nested-loops join.
-            return -1.0;
+            if (j.p == Predicate.Op.EQUALS)
+            {
+                return cost1 + cost2 + card1 * card2;
+            }
+            return cost1 + cost1 * card2 + card1 * card2;
         }
     }
 
@@ -155,9 +169,51 @@ public class JoinOptimizer {
             String field2PureName, int card1, int card2, boolean t1pkey,
             boolean t2pkey, Map<String, TableStats> stats,
             Map<String, Integer> tableAliasToId) {
-        int card = 1;
+
         // some code goes here
-        return card <= 0 ? 1 : card;
+
+        if (joinOp == Predicate.Op.EQUALS)
+        {
+            if (t1pkey && t2pkey)
+            {
+                return min(card1, card2);
+            }
+            else if (t1pkey)
+            {
+                return card2;
+            }
+            else if (t2pkey)
+            {
+                return card1;
+            }
+            else
+            {
+                return max(card1, card2);
+            }
+        }
+        else if (joinOp == Predicate.Op.NOT_EQUALS)
+        {
+            if (t1pkey && t2pkey)
+            {
+                return card1 * card2 - min(card1, card2);
+            }
+            else if (t1pkey)
+            {
+                return card1 * card2 - card2;
+            }
+            else if (t2pkey)
+            {
+                return card1 * card2 - card1;
+            }
+            else
+            {
+                return card1 * card2 - max(card1, card2);
+            }
+        }
+        else
+        {
+            return (int) (card1 * card2 * 0.3);
+        }
     }
 
     /**
@@ -221,7 +277,32 @@ public class JoinOptimizer {
 
         // some code goes here
         //Replace the following
-        return joins;
+
+        HashSet<LogicalJoinNode> joinNodeSet = new HashSet<LogicalJoinNode>(this.joins);
+        for (int i = 1; i <= this.joins.size(); i++)
+        {
+            for (Set<LogicalJoinNode> subSet : this.enumerateSubsets(this.joins, i))
+            {
+                Vector<LogicalJoinNode> bestPlan = null;
+                double bestCost = Double.MAX_VALUE;
+                int currentCard = 0;
+                for (LogicalJoinNode tmpJoinNode : subSet)
+                {
+                    CostCard tmpCostCard = this.computeCostAndCardOfSubplan(stats, filterSelectivities, tmpJoinNode, subSet, bestCost, this.globalPlanCache);
+                    if (tmpCostCard == null)
+                        continue;
+                    if (tmpCostCard.cost < bestCost)
+                    {
+                        bestCost = tmpCostCard.cost;
+                        currentCard = tmpCostCard.card;
+                        bestPlan = tmpCostCard.plan;
+                    }
+                }
+                this.globalPlanCache.addPlan(subSet, bestCost, currentCard, bestPlan);
+            }
+        }
+        return this.globalPlanCache.getOrder(joinNodeSet);
+//        return this.joins;
     }
 
     // ===================== Private Methods =================================
