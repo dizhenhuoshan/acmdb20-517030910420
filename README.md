@@ -6,6 +6,9 @@ Working Process:
 - lab 2 finished, and [document](https://github.com/dizhenhuoshan/acmdb20-517030910420/blob/submit/acmdb-lab2/README.md) is available in the `acmdb-lab2` folder.
 - lab 3 finished, and [document](https://github.com/dizhenhuoshan/acmdb20-517030910420/blob/submit/acmdb-lab3/README.md) is available in the `acmdb-lab3` folder.
 - lab 4 finished, and [document](https://github.com/dizhenhuoshan/acmdb20-517030910420/blob/submit/acmdb-lab4/README.md) is available in the `acmdb-lab4` folder.
+- lab 5 finished, and [document](https://github.com/dizhenhuoshan/acmdb20-517030910420/blob/submit/acmdb-lab5/README.md) is available in the `acmdb-lab5` folder.
+
+All labs have been finished now :)
 
 Azure Buliding status (Ubuntu 16.04 with OpenJDK8):
 
