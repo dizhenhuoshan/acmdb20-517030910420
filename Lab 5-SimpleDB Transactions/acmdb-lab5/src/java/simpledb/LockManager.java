@@ -10,8 +10,8 @@ public class LockManager
     private Hashtable<TransactionId, HashSet<Lock>> tidLockTable;
     private Hashtable<PageId, Lock> pidLockTable;
 
-    public static final int BASE_TIMELIMIT = 500; // 200 ms for max waiting time base
-    public static final int VAR_TIMELIMIT = 500; // 200 ms for varies waiting time
+    public static final int BASE_TIMELIMIT = 500; // 500 ms for max waiting time base
+    public static final int VAR_TIMELIMIT = 500; // 500 ms for varies waiting time
     public static final int WAIT_PERIOD = 50; // 50 ms per wait
     public static final Random RANDOM_GENERATOR = new Random();
 
